@@ -33,23 +33,23 @@ public class ChatServer {
     /**
      * 创建DefaultChannelGroup，用来保存所有的已经建立连接的websocketChannel
      */
-    private final ChannelGroup channelGroup = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
+    private static final ChannelGroup channelGroup = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
     /**
      * 用户唯一标识和连接通道映射
      */
-    private final ConcurrentMap<String, List<ChannelInfo>> userChannelMap = PlatformDependent.newConcurrentHashMap();
+    private static final ConcurrentMap<String, List<ChannelInfo>> userChannelMap = PlatformDependent.newConcurrentHashMap();
     /**
      * 连接通道和用户唯一标识映射
      */
-    private final ConcurrentMap<String, RequestInfo> channelUserMap = PlatformDependent.newConcurrentHashMap();
+    private static final ConcurrentMap<String, RequestInfo> channelUserMap = PlatformDependent.newConcurrentHashMap();
     /**
      * 接收客户端TCP连接的Reactor线程池
      */
-    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
+    private static final EventLoopGroup bossGroup = new NioEventLoopGroup();
     /**
      * 处理IO读写的Reactor线程池
      */
-    private final EventLoopGroup workGroup = new NioEventLoopGroup();
+    private static final EventLoopGroup workGroup = new NioEventLoopGroup();
     /**
      * 对外暴露的对channel操作的接口
      */
@@ -85,7 +85,7 @@ public class ChatServer {
                     new ServerBootstrap().group(bossGroup,workGroup)
                             .channel(channelClass)
                             .option(ChannelOption.SO_BACKLOG, 2048)
-//                            .option(ChannelOption.TCP_NODELAY, true)
+                            .option(ChannelOption.TCP_NODELAY, true)
                             .childOption(ChannelOption.SO_KEEPALIVE, true)
                             .childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(592048))
                             .childHandler(createInitializer(channelGroup,userChannelMap,wsPath,channelUserMap,socketEvent,businessEvent)).bind(address).sync().channel().closeFuture().sync();
