@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration  scan="true" scanPeriod="60 seconds" debug="false">
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 在IDE中运行, 控制台输出全部日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        </filter>
+        <encoder>
+            <pattern>%date %boldYellow(%thread) %highlight(%-5level) %boldGreen(%logger{50}:%L) --- %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 在IDE中运行, 不输出日志文件, 打包时level被portable-config-maven-plugin插件改为DEBUG, 输出日志文件 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <File>logs/logback.log</File>
+        <!-- 按每小时滚动文件，如果一个小时内达到10M也会滚动文件, 滚动文件将会压缩成zip格式, 最多保留672个滚动文件 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/oversimplify-websocket-%d{yyyy-MM-dd-HH}.%i.zip</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>672</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{MM:dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ErrorConsole" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 在IDE中运行, 控制台输出全部日志, 打包时level被portable-config-maven-plugin插件改为OFF, 控制台不输出日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss} | %highlight(%-5level) | %boldYellow(%thread) | %boldGreen(%logger{36}) | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="RollingFile"/>
+    </root>
+
+
+</configuration>
