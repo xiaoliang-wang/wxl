@@ -1,1 +1,1 @@
-open module wxl.log {}
+//open module wxl.log {}

@@ -1,20 +1,19 @@
 package com.wxl.websocket.start;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.group.ChannelGroup;
-import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.ImmediateEventExecutor;
-import io.netty.util.internal.PlatformDependent;
 import com.wxl.websocket.event.BusinessEvent;
 import com.wxl.websocket.event.SocketEvent;
 import com.wxl.websocket.event.impl.BusinessEventImpl;
 import com.wxl.websocket.model.ChannelInfo;
 import com.wxl.websocket.model.RequestInfo;
 import com.wxl.websocket.netty.ChatServerInitializer;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.ImmediateEventExecutor;
+import io.netty.util.internal.PlatformDependent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,30 +67,31 @@ public class ChatServer {
     protected BusinessEvent run(final InetSocketAddress address,final String wsPath,final SocketEvent socketEvent) {
 
 //        使用异步线程启动websocket服务，因为closeFuture().sync()后面的代码不能执行。如果不使用异步线程就无法对外暴露businessEvent
-        Thread websocketBootstrapThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                LOGGER.info("websocket服务启动开始，host："+address.toString()+"；url:"+wsPath);
+        Thread websocketBootstrapThread = new Thread(() -> {
+            LOGGER.info("websocket服务启动开始，host："+address.toString()+"；url:"+wsPath);
 
-                Class channelClass = null;
+            Class channelClass = null;
 
-                if(System.getProperty("os.name").toLowerCase().indexOf("linux") >= 0){
-                    channelClass = EpollServerSocketChannel.class;
-                }else {
-                    channelClass = NioServerSocketChannel.class;
-                }
+//                String osName = System.getProperty("os.name").toLowerCase();
+//                System.out.println("操作系统名称："+osName);
+//                if(null != osName && !osName.isEmpty() && osName.indexOf("linux") >= 0){
+//                    channelClass = EpollServerSocketChannel.class;
+//                }else {
+//                    channelClass = NioServerSocketChannel.class;
+//                }
 
-                try {
-                    new ServerBootstrap().group(bossGroup,workGroup)
-                            .channel(channelClass)
-                            .option(ChannelOption.SO_BACKLOG, 2048)
-                            .option(ChannelOption.TCP_NODELAY, true)
-                            .childOption(ChannelOption.SO_KEEPALIVE, true)
-                            .childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(592048))
-                            .childHandler(createInitializer(channelGroup,userChannelMap,wsPath,channelUserMap,socketEvent,businessEvent)).bind(address).sync().channel().closeFuture().sync();
-                } catch (InterruptedException e) {
-                    LOGGER.error("websocket服务启动失败", e);
-                }
+            channelClass = NioServerSocketChannel.class;
+
+            try {
+                new ServerBootstrap().group(bossGroup,workGroup)
+                        .channel(channelClass)
+                        .option(ChannelOption.SO_BACKLOG, 2048)
+                        .childOption(ChannelOption.TCP_NODELAY, true)
+                        .childOption(ChannelOption.SO_KEEPALIVE, true)
+                        .childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(592048))
+                        .childHandler(createInitializer(channelGroup,userChannelMap,wsPath,channelUserMap,socketEvent,businessEvent)).bind(address).sync().channel().closeFuture().sync();
+            } catch (InterruptedException e) {
+                LOGGER.error("websocket服务启动失败", e);
             }
         });
         websocketBootstrapThread.setName("websocket-"+address.getPort()+"-"+ (wsPath.startsWith("/") ? wsPath.substring(1):wsPath) );
